@@ -11,7 +11,14 @@
     
 关键词：推荐系统，知识付费，文本表征，深度学习，冷启动
 
-dataprocess.py FM的数据预处理
-deep_fm_v2.py FM的pytorch实现（loss函数有修改）
-performanceCompare.py 比较结果
+1. dataprocess.py FM的数据预处理
+2. deep_fm_v2.py MD-DeepFM的pytorch实现（loss函数有修改）
+3. DeepFM.py 原模型实现
+4. performanceCompare.py 比较结果
+5. data文件夹是数据：其中train.txt里面只添加了部分训练数据，原文件太大无法上传
+
+使用方法建议：
+    1. 想要学习DeepFM的伙伴可以认真看一遍DeepFM.py代码，这是我在网上找到的输入我的数据以后能够正常运行的代码，借助代码能够更好地了解DeepFM这个模型
+    2. 仔细看下模型输入的数据结构，建议看下模型训练集和测试集以及特征大小的文件
+
 
