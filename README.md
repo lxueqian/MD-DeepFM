@@ -12,7 +12,7 @@
 关键词：推荐系统，知识付费，文本表征，深度学习，冷启动
 
 1. dataprocess.py FM的数据预处理
-2. deep_fm_v2.py MD-DeepFM的pytorch实现（loss函数有修改）
+2. deep_fm_v2.py MD-DeepFM的pytorch实现（loss函数和输入数据集有优化）
 3. DeepFM.py 原模型实现
 4. performanceCompare.py 比较结果
 5. data文件夹是数据：其中train.txt里面只添加了部分训练数据，原文件太大无法上传
