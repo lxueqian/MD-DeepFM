@@ -61,16 +61,6 @@ class DeepFM(nn.Module):
             init fm part
         """
 
-#        self.fm_first_order_embeddings = nn.ModuleList(
-#            [nn.Embedding(feature_size, 1) for feature_size in self.feature_sizes])
-        fm_first_order_Linears = nn.ModuleList(
-                [nn.Linear(feature_size, self.embedding_size) for feature_size in self.feature_sizes[:12]])
-        fm_first_order_embeddings = nn.ModuleList(
-                [nn.Embedding(feature_size, self.embedding_size) for feature_size in self.feature_sizes[12:]])
-        self.fm_first_order_models = fm_first_order_Linears.extend(fm_first_order_embeddings)
-
-#        self.fm_second_order_embeddings = nn.ModuleList(
-#            [nn.Embedding(feature_size, self.embedding_size) for feature_size in self.feature_sizes])
         fm_second_order_Linears = nn.ModuleList(
                 [nn.Linear(feature_size, self.embedding_size) for feature_size in self.feature_sizes[:12]])
         fm_second_order_embeddings = nn.ModuleList(
@@ -85,7 +75,7 @@ class DeepFM(nn.Module):
         for i in range(1, len(hidden_dims) + 1):
             setattr(self, 'linear_'+str(i),
                     nn.Linear(all_dims[i-1], all_dims[i]))
-            # nn.init.kaiming_normal_(self.fc1.weight)
+
             setattr(self, 'batchNorm_' + str(i),
                     nn.BatchNorm1d(all_dims[i]))
             setattr(self, 'dropout_'+str(i),
@@ -103,23 +93,9 @@ class DeepFM(nn.Module):
             fm part
         """
         emb = self.fm_first_order_models[20]
-#        print(Xi.size())
         for num in Xi[:, 20, :][0]:
             if num > self.feature_sizes[20]:
                 print("index out")
-
-#        fm_first_order_emb_arr = [(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in enumerate(self.fm_first_order_models)]
-#        fm_first_order_emb_arr = [(emb(Xi[:, i, :]) * Xv[:, i])  for i, emb in enumerate(self.fm_first_order_models)]
-        fm_first_order_emb_arr = []
-        for i, emb in enumerate(self.fm_first_order_models):
-            if i <=12:
-                Xi_tem = Xi[:, i, :].to(device=self.device, dtype=torch.float)
-                fm_first_order_emb_arr.append((torch.sum(emb(Xi_tem).unsqueeze(1), 1).t() * Xv[:, i]).t())
-            else:
-                Xi_tem = Xi[:, i, :].to(device=self.device, dtype=torch.long)
-                fm_first_order_emb_arr.append((torch.sum(emb(Xi_tem), 1).t() * Xv[:, i]).t())
-
-        fm_first_order = torch.cat(fm_first_order_emb_arr, 1)
 
         fm_second_order_emb_arr = []
         for i, emb in enumerate(self.fm_second_order_models):
@@ -129,6 +105,8 @@ class DeepFM(nn.Module):
             else:
                 Xi_tem = Xi[:, i, :].to(device=self.device, dtype=torch.long)
                 fm_second_order_emb_arr.append((torch.sum(emb(Xi_tem), 1).t() * Xv[:, i]).t())
+                
+         fm_first_order = torch.cat(fm_second_order_emb_arr, 1)
                 
         fm_sum_second_order_emb = sum(fm_second_order_emb_arr)
         fm_sum_second_order_emb_square = fm_sum_second_order_emb * \
@@ -142,8 +120,7 @@ class DeepFM(nn.Module):
         """
             deep part
         """
-#        print(len(fm_second_order_emb_arr))
-#        print(torch.cat(fm_second_order_emb_arr, 1).shape)
+
         deep_emb = torch.cat(fm_second_order_emb_arr, 1)
         deep_out = deep_emb
         for i in range(1, len(self.hidden_dims) + 1):
@@ -154,10 +131,7 @@ class DeepFM(nn.Module):
         """
             sum
         """
-#        print("1",torch.sum(fm_first_order, 1).shape)
-#        print("2",torch.sum(fm_second_order, 1).shape)
-#        print("deep",torch.sum(deep_out, 1).shape)
-#        print("bias",bias.shape)
+
         bias = torch.nn.Parameter(torch.randn(Xi.size(0)))
         total_sum = torch.sum(fm_first_order, 1) + \
                     torch.sum(fm_second_order, 1) + \
@@ -189,8 +163,6 @@ class DeepFM(nn.Module):
                 y = y.to(device=self.device, dtype=self.dtype)
                 
                 total = model(xi, xv)
-#                print(total.shape)
-#                print(y.shape)
                 loss = criterion(total, y)
                 optimizer.zero_grad()
                 loss.backward()
@@ -216,12 +188,8 @@ class DeepFM(nn.Module):
                 y = y.to(device=self.device, dtype=self.dtype)
                 total = model(xi, xv)
                 preds = (F.sigmoid(total) > 0.5).to(dtype=self.dtype)
-#                print(preds.dtype)
-#                print(y.dtype)
-#                print(preds.eq(y).cpu().sum())
                 num_correct += (preds == y).sum()
                 num_samples += preds.size(0)
-#                print("successful")
             acc = float(num_correct) / num_samples
             print('Got %d / %d correct (%.2f%%)' % (num_correct, num_samples, 100 * acc))
 
